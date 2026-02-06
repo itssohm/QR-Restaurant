@@ -1,0 +1,7 @@
+Flask
+SQLAlchemy
+Flask-Login
+Flask-SocketIO
+qrcode
+Flask-Migrate
+eventlet

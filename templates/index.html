@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Menu - Order Directly from Your Table</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Basic styling for the landing page */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+        
+        .hero {
+            background-color: #ff6b6b;
+            color: white;
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background-color: white;
+            color: #ff6b6b;
+            padding: 0.8rem 1.5rem;
+            font-size: 1.1rem;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: bold;
+            margin: 0.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .features {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .features h2 {
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-item {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        
+        .feature-item h3 {
+            color: #ff6b6b;
+            margin-top: 0;
+        }
+        
+        .restaurants {
+            background-color: #f0f0f0;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+        
+        .restaurants h2 {
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+        
+        .restaurant-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .restaurant-card {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        
+        .restaurant-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .restaurant-image {
+            height: 180px;
+            background-color: #ddd;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .restaurant-info {
+            padding: 1.5rem;
+        }
+        
+        .restaurant-info h3 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .admin-login {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 1rem;
+        }
+        
+        .admin-link {
+            color: #666;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .admin-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>QR Menu - Seamless Restaurant Ordering</h1>
+        <p>Skip the wait. Browse menus, order, and pay directly from your table with a simple scan of a QR code.</p>
+        <a href="#restaurants" class="cta-button">Find Restaurants</a>
+        <a href="#how-it-works" class="cta-button">How It Works</a>
+    </div>
+    
+    <div class="features" id="how-it-works">
+        <h2>How It Works</h2>
+        <div class="feature-grid">
+            <div class="feature-item">
+                <h3>1. Scan QR Code</h3>
+                <p>Each table at participating restaurants has a unique QR code. Simply scan it with your phone camera.</p>
+            </div>
+            <div class="feature-item">
+                <h3>2. Browse & Order</h3>
+                <p>Browse the digital menu, select your items, customize them as needed, and add them to your cart.</p>
+            </div>
+            <div class="feature-item">
+                <h3>3. Pay & Enjoy</h3>
+                <p>Pay securely through the app, and the kitchen will start preparing your order right away.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="restaurants" id="restaurants">
+        <h2>Featured Restaurants</h2>
+        <div class="restaurant-grid">
+            <!-- This section will be dynamically populated from the database -->
+            <!-- For now, we'll include some static examples -->
+            <div class="restaurant-card">
+                <div class="restaurant-image" style="background-image: url('{{ url_for('static', filename='img/restaurant1.jpg') }}');"></div>
+                <div class="restaurant-info">
+                    <h3>Spice Garden</h3>
+                    <p>Authentic Indian cuisine</p>
+                    <a href="/menu?rid=1" class="cta-button">View Menu</a>
+                </div>
+            </div>
+            <div class="restaurant-card">
+                <div class="restaurant-image" style="background-image: url('{{ url_for('static', filename='img/restaurant2.jpg') }}');"></div>
+                <div class="restaurant-info">
+                    <h3>Pasta Paradise</h3>
+                    <p>Italian specialties</p>
+                    <a href="/menu?rid=2" class="cta-button">View Menu</a>
+                </div>
+            </div>
+            <div class="restaurant-card">
+                <div class="restaurant-image" style="background-image: url('{{ url_for('static', filename='img/restaurant3.jpg') }}');"></div>
+                <div class="restaurant-info">
+                    <h3>Burger Bliss</h3>
+                    <p>Gourmet burgers & fries</p>
+                    <a href="/menu?rid=3" class="cta-button">View Menu</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="admin-login">
+        <a href="/admin/login" class="admin-link">Restaurant Owner? Login Here</a>
+    </div>
+    
+    <footer class="footer">
+        <p>&copy; {{ current_year if current_year else '2025' }} QR Menu - All rights reserved</p>
+    </footer>
+    
+    <script>
+        // You can add JavaScript for interactive elements here
+        document.addEventListener('DOMContentLoaded', function() {
+            // Example: Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

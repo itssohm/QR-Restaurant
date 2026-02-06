@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+
+{% block title %}Table Management{% endblock %}
+
+{% block header %}
+<div class="admin-header">
+    <h1>Table Management</h1>
+    <div class="admin-nav">
+        <a href="{{ url_for('admin_dashboard') }}">Orders</a>
+        <a href="{{ url_for('admin_menu') }}">Menu</a>
+        <a href="{{ url_for('admin_tables') }}" class="active">Tables</a>
+        <a href="{{ url_for('admin_logout') }}">Logout</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="tables-container">
+    <div class="tables-header">
+        <h2>Your Tables</h2>
+        <button class="add-table-btn" data-toggle="modal" data-target="#addTableModal">+ Add New Table</button>
+    </div>
+    
+    <div class="tables-list">
+        {% if tables %}
+            {% for table in tables %}
+                <div class="table-card">
+                    <div class="table-info">
+                        <h3>Table #{{ table.table_number }}</h3>
+                        <p>{{ table.capacity }} Seats</p>
+                        <p>{{ table.location }}</p>
+                    </div>
+                    <div class="table-actions">
+                        <button class="qr-btn" data-table-id="{{ table.id }}" data-table-number="{{ table.table_number }}">View QR Code</button>
+                        <button class="edit-btn" data-toggle="modal" data-target="#editTableModal" 
+                                data-table-id="{{ table.id }}" 
+                                data-table-number="{{ table.table_number }}" 
+                                data-capacity="{{ table.capacity }}" 
+                                data-location="{{ table.location }}">Edit</button>
+                        <button class="delete-btn" data-toggle="modal" data-target="#deleteTableModal" 
+                                data-table-id="{{ table.id }}" 
+                                data-table-number="{{ table.table_number }}">Delete</button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-tables">
+                <p>You haven't added any tables yet.</p>
+                <button class="add-table-btn" data-toggle="modal" data-target="#addTableModal">+ Add Your First Table</button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Table Modal -->
+<div class="modal fade" id="addTableModal" tabindex="-1" role="dialog" aria-labelledby="addTableModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTableModalLabel">Add New Table</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ url_for('add_table') }}" method="POST">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="table_number">Table Number*</label>
+                        <input type="number" class="form-control" id="table_number" name="table_number" required min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="capacity">Seating Capacity</label>
+                        <input type="number" class="form-control" id="capacity" name="capacity" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Location (Optional)</label>
+                        <input type="text" class="form-control" id="location" name="location" placeholder="e.g., Patio, Window, etc.">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Table</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Table Modal -->
+<div class="modal fade" id="editTableModal" tabindex="-1" role="dialog" aria-labelledby="editTableModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editTableModalLabel">Edit Table</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ url_for('edit_table') }}" method="POST">
+                <input type="hidden" id="edit_table_id" name="table_id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="edit_table_number">Table Number*</label>
+                        <input type="number" class="form-control" id="edit_table_number" name="table_number" required min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_capacity">Seating Capacity</label>
+                        <input type="number" class="form-control" id="edit_capacity" name="capacity" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_location">Location (Optional)</label>
+                        <input type="text" class="form-control" id="edit_location" name="location" placeholder="e.g., Patio, Window, etc.">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Table Modal -->
+<div class="modal fade" id="deleteTableModal" tabindex="-1" role="dialog" aria-labelledby="deleteTableModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteTableModalLabel">Delete Table</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ url_for('delete_table') }}" method="POST">
+                <input type="hidden" id="delete_table_id" name="table_id">
+                <div class="modal-body">
+                    <p>Are you sure you want to delete Table #<span id="delete_table_number"></span>?</p>
+                    <p class="text-danger">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete Table</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- QR Code Modal -->
+<div class="modal fade" id="qrCodeModal" tabindex="-1" role="dialog" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="qrCodeModalLabel">QR Code for Table #<span id="qr_table_number"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="qrcode"></div>
+                <p class="mt-3">Scan this QR code to access the menu for this table.</p>
+                <p class="small text-muted">URL: <span id="qr_url"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="downloadQR">Download QR Code</button>
+                <button type="button" class="btn btn-success" id="printQR">Print QR Code</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    // Handle Edit Table Modal
+    $('#editTableModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var tableId = button.data('table-id');
+        var tableNumber = button.data('table-number');
+        var capacity = button.data('capacity');
+        var location = button.data('location');
+        
+        var modal = $(this);
+        modal.find('#edit_table_id').val(tableId);
+        modal.find('#edit_table_number').val(tableNumber);
+        modal.find('#edit_capacity').val(capacity);
+        modal.find('#edit_location').val(location);
+    });
+    
+    // Handle Delete Table Modal
+    $('#deleteTableModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var tableId = button.data('table-id');
+        var tableNumber = button.data('table-number');
+        
+        var modal = $(this);
+        modal.find('#delete_table_id').val(tableId);
+        modal.find('#delete_table_number').text(tableNumber);
+    });
+    
+    // Handle QR Code Modal
+    $(document).on('click', '.qr-btn', function() {
+        var tableId = $(this).data('table-id');
+        var tableNumber = $(this).data('table-number');
+        var restaurantId = '{{ restaurant.id }}';
+        
+        var menuUrl = window.location.origin + '/menu?rid=' + restaurantId + '&tid=' + tableId;
+        
+        $('#qr_table_number').text(tableNumber);
+        $('#qr_url').text(menuUrl);
+        
+        // Clear previous QR code
+        $('#qrcode').empty();
+        
+        // Generate QR code
+        new QRCode(document.getElementById("qrcode"), {
+            text: menuUrl,
+            width: 256,
+            height: 256,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        
+        $('#qrCodeModal').modal('show');
+    });
+    
+    // Download QR Code
+    $('#downloadQR').on('click', function() {
+        var canvas = document.querySelector('#qrcode canvas');
+        var tableNumber = $('#qr_table_number').text();
+        
+        if (canvas) {
+            var link = document.createElement('a');
+            link.download = 'table_' + tableNumber + '_qr_code.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    });
+    
+    // Print QR Code
+    $('#printQR').on('click', function() {
+        var canvas = document.querySelector('#qrcode canvas');
+        
+        if (canvas) {
+            var win = window.open();
+            win.document.write('<html><head><title>QR Code for Table #' + $('#qr_table_number').text() + '</title></head><body>');
+            win.document.write('<h1 style="text-align: center;">QR Code for Table #' + $('#qr_table_number').text() + '</h1>');
+            win.document.write('<div style="text-align: center;"><img src="' + canvas.toDataURL() + '" style="max-width: 100%;"></div>');
+            win.document.write('<p style="text-align: center;">Scan this QR code to access the menu for this table.</p>');
+            win.document.write('</body></html>');
+            win.document.close();
+            win.print();
+        }
+    });
+</script>
+{% endblock %}

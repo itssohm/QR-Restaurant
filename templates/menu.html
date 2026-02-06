@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ restaurant.name }} - Menu{% endblock %}
+
+{% block header %}
+<div class="restaurant-header">
+    {% if restaurant.logo_url %}
+    <img src="{{ restaurant.logo_url }}" alt="{{ restaurant.name }} Logo" class="restaurant-logo">
+    {% endif %}
+    <h1>{{ restaurant.name }}</h1>
+    {% if restaurant.description %}
+    <p class="restaurant-description">{{ restaurant.description }}</p>
+    {% endif %}
+    {% if table_id %}
+    <p class="table-info">Table: {{ table_id }}</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="menu-container">
+    {% set categories = [] %}
+    {% for item in menu_items %}
+        {% if item.category not in categories %}
+            {% set _ = categories.append(item.category) %}
+        {% endif %}
+    {% endfor %}
+    
+    <div class="category-tabs">
+        {% for category in categories %}
+        <button class="category-tab" data-category="{{ category }}">{{ category }}</button>
+        {% endfor %}
+    </div>
+    
+    {% for category in categories %}
+    <div class="menu-category" id="category-{{ category }}">
+        <h2>{{ category }}</h2>
+        <div class="menu-items">
+            {% for item in menu_items %}
+                {% if item.category == category and item.is_available %}
+                <div class="menu-item" data-id="{{ item.id }}" data-name="{{ item.name }}" data-price="{{ item.price }}">
+                    {% if item.image_url %}
+                    <img src="{{ item.image_url }}" alt="{{ item.name }}" class="item-image">
+                    {% endif %}
+                    <div class="item-details">
+                        <h3>{{ item.name }}</h3>
+                        <p class="item-description">{{ item.description }}</p>
+                        <p class="item-price">₹{{ item.price }}</p>
+                    </div>
+                    <button class="add-to-cart-btn">Add to Cart</button>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="cart-preview">
+    <h2>Your Cart</h2>
+    <div class="cart-items"></div>
+    <div class="cart-total">Total: ₹<span id="cart-total-amount">0.00</span></div>
+    <button id="checkout-btn" disabled>Proceed to Checkout</button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Cart management JavaScript will go here
+    const cartItems = [];
+    const restaurantId = "{{ restaurant.id }}";
+    const tableId = "{{ table_id }}";
+    
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const menuItem = this.closest('.menu-item');
+            const itemId = menuItem.dataset.id;
+            const itemName = menuItem.dataset.name;
+            const itemPrice = parseFloat(menuItem.dataset.price);
+            
+            // Check if item is already in cart
+            const existingItem = cartItems.find(item => item.id === itemId);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cartItems.push({
+                    id: itemId,
+                    name: itemName,
+                    price: itemPrice,
+                    quantity: 1
+                });
+            }
+            
+            updateCartDisplay();
+        });
+    });
+    
+    function updateCartDisplay() {
+        const cartItemsContainer = document.querySelector('.cart-items');
+        cartItemsContainer.innerHTML = '';
+        
+        let total = 0;
+        
+        cartItems.forEach(item => {
+            const itemTotal = item.price * item.quantity;
+            total += itemTotal;
+            
+            const itemElement = document.createElement('div');
+            itemElement.classList.add('cart-item');
+            itemElement.innerHTML = `
+                <span class="item-name">${item.name}</span>
+                <span class="item-quantity">
+                    <button class="decrease-qty">-</button>
+                    <span>${item.quantity}</span>
+                    <button class="increase-qty">+</button>
+                </span>
+                <span class="item-price">₹${itemTotal.toFixed(2)}</span>
+                <button class="remove-item">×</button>
+            `;
+            cartItemsContainer.appendChild(itemElement);
+        });
+        
+        document.getElementById('cart-total-amount').textContent = total.toFixed(2);
+        document.getElementById('checkout-btn').disabled = cartItems.length === 0;
+        
+        // Store cart in localStorage for use in checkout page
+        localStorage.setItem('cart', JSON.stringify({
+            items: cartItems,
+            restaurantId: restaurantId,
+            tableId: tableId,
+            total: total
+        }));
+    }
+    
+    document.getElementById('checkout-btn').addEventListener('click', function() {
+        window.location.href = `/cart?rid=${restaurantId}&tid=${tableId}`;
+    });
+    
+    // Add event delegation for quantity changes and item removal
+    document.querySelector('.cart-items').addEventListener('click', function(e) {
+        if (e.target.classList.contains('increase-qty')) {
+            const itemElement = e.target.closest('.cart-item');
+            const itemIndex = Array.from(itemElement.parentNode.children).indexOf(itemElement);
+            cartItems[itemIndex].quantity += 1;
+            updateCartDisplay();
+        } else if (e.target.classList.contains('decrease-qty')) {
+            const itemElement = e.target.closest('.cart-item');
+            const itemIndex = Array.from(itemElement.parentNode.children).indexOf(itemElement);
+            if (cartItems[itemIndex].quantity > 1) {
+                cartItems[itemIndex].quantity -= 1;
+            } else {
+                cartItems.splice(itemIndex, 1);
+            }
+            updateCartDisplay();
+        } else if (e.target.classList.contains('remove-item')) {
+            const itemElement = e.target.closest('.cart-item');
+            const itemIndex = Array.from(itemElement.parentNode.children).indexOf(itemElement);
+            cartItems.splice(itemIndex, 1);
+            updateCartDisplay();
+        }
+    });
+    
+    // Category tabs functionality
+    document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const category = this.dataset.category;
+            document.querySelectorAll('.menu-category').forEach(cat => {
+                cat.style.display = 'none';
+            });
+            document.getElementById(`category-${category}`).style.display = 'block';
+            
+            document.querySelectorAll('.category-tab').forEach(t => {
+                t.classList.remove('active');
+            });
+            this.classList.add('active');
+        });
+    });
+    
+    // Activate the first category tab by default
+    if (document.querySelector('.category-tab')) {
+        document.querySelector('.category-tab').click();
+    }
+</script>
+{% endblock %}

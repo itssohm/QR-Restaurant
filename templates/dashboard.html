@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block header %}
+<div class="admin-header">
+    <h1>Restaurant Dashboard</h1>
+    <div class="admin-nav">
+        <a href="{{ url_for('admin_dashboard') }}" class="active">Orders</a>
+        <a href="{{ url_for('admin_menu') }}">Menu</a>
+        <a href="{{ url_for('admin_tables') }}">Tables</a>
+        <a href="{{ url_for('admin_logout') }}">Logout</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="orders-container">
+    <div class="order-filters">
+        <button class="filter-btn active" data-status="all">All Orders</button>
+        <button class="filter-btn" data-status="pending">Pending</button>
+        <button class="filter-btn" data-status="preparing">Preparing</button>
+        <button class="filter-btn" data-status="ready">Ready</button>
+        <button class="filter-btn" data-status="completed">Completed</button>
+    </div>
+    
+    <div class="orders-list">
+        <!-- Orders will be loaded dynamically -->
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script>
+    // Connect to Socket.IO for real-time updates
+    const socket = io();
+    
+    // Listen for new orders
+    socket.on('new_order', function(order) {
+        // Check if it's for this restaurant
+        if (order.restaurant_id === '{{ restaurant.id }}') {
+            addOrderToList(order);
+            // Show notification
+            showNotification('New Order', `New order received for Table ${order.table_number}`);
+        }
+    });
+    
+    // Listen for order status updates
+    socket.on('order_update', function(order) {
+        // Update the order in the list
+        updateOrderInList(order);
+    });
+    
+    // Functions to handle orders display
+    function loadOrders(status = 'all') {
+        fetch(`/api/orders?status=${status}`)
+            .then(response => response.json())
+            .then(orders => {
+                const ordersList = document.querySelector('.orders-list');
+                ordersList.innerHTML = '';
+                
+                if (orders.length === 0) {
+                    ordersList.innerHTML = '<p class="no-orders">No orders found.</p>';
+                    return;
+                }
+                
+                orders.forEach(order => {
+                    addOrderToList(order);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading orders:', error);
+            });
+    }
+    
+    function addOrderToList(order) {
+        const ordersList = document.querySelector('.orders-list');
+        const orderElement = document.createElement('div');
+        orderElement.classList.add('order-card');
+        orderElement.dataset.orderId = order.id;
+        orderElement.dataset.status = order.status;
+        
+        let statusClass = '';
+        switch (order.status) {
+            case 'pending':
+                statusClass = 'status-pending';
+                break;
+            case 'preparing':
+                statusClass = 'status-preparing';
+                break;
+            case 'ready':
+                statusClass = 'status-ready';
+                break;
+            case 'completed':
+                statusClass = 'status-completed';
+                break;
+            case 'cancelled':
+                statusClass = 'status-cancelled';
+                break;
+        }
+        
+        orderElement.innerHTML = `
+            <div class="order-header">
+                <h3>Order #${order.id}</h3>
+                <span class="order-time">${new Date(order.created_at).toLocaleTimeString()}</span>
+            </div>
+            <div class="order-info">
+                <span class="table-number">Table ${order.table_number}</span>
+                <span class="order-status ${statusClass}">${order.status}</span>
+            </div>
+            <div class="order-items">
+                ${order.items.map(item => `
+                    <div class="order-item">
+                        <span class="item-quantity">${item.quantity}×</span>
+                        <span class="item-name">${item.name}</span>
+                        ${item.special_instructions ? `<p class="special-instructions">${item.special_instructions}</p>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+            <div class="order-actions">
+                ${getActionButtonsForStatus(order.status, order.id)}
+            </div>
+        `;
+        
+        // Add new orders at the top
+        if (ordersList.firstChild) {
+            ordersList.insertBefore(orderElement, ordersList.firstChild);
+        } else {
+            ordersList.appendChild(orderElement);
+        }
+        
+        // Add event listeners for action buttons
+        addActionButtonEventListeners(orderElement);
+    }
+    
+    function getActionButtonsForStatus(status, orderId) {
+        switch (status) {
+            case 'pending':
+                return `<button class="action-btn accept-btn" data-action="preparing" data-order-id="${orderId}">Accept Order</button>
+                        <button class="action-btn cancel-btn" data-action="cancelled" data-order-id="${orderId}">Cancel Order</button>`;
+            case 'preparing':
+                return `<button class="action-btn ready-btn" data-action="ready" data-order-id="${orderId}">Mark as Ready</button>`;
+            case 'ready':
+                return `<button class="action-btn complete-btn" data-action="completed" data-order-id="${orderId}">Complete Order</button>`;
+            case 'completed':
+            case 'cancelled':
+                return ''; // No actions for completed or cancelled orders
+            default:
+                return '';
+        }
+    }
+    
+    function addActionButtonEventListeners(orderElement) {
+        orderElement.querySelectorAll('.action-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const orderId = this.dataset.orderId;
+                const action = this.dataset.action;
+                
+                updateOrderStatus(orderId, action);
+            });
+        });
+    }
+    
+    function updateOrderStatus(orderId, status) {
+        fetch(`/api/orders/${orderId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: status })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Status updated successfully
+                updateOrderInList(data.order);
+            } else {
+                alert('Error updating order status. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating order status. Please try again.');
+        });
+    }
+    
+    function updateOrderInList(updatedOrder) {
+        const orderElement = document.querySelector(`.order-card[data-order-id="${updatedOrder.id}"]`);
+        if (orderElement) {
+            // Update the order element with new data
+            orderElement.dataset.status = updatedOrder.status;
+            orderElement.querySelector('.order-status').textContent = updatedOrder.status;
+            orderElement.querySelector('.order-status').className = `order-status status-${updatedOrder.status}`;
+            orderElement.querySelector('.order-actions').innerHTML = getActionButtonsForStatus(updatedOrder.status, updatedOrder.id);
+            
+            // Add event listeners for new action buttons
+            addActionButtonEventListeners(orderElement);
+        }
+    }
+    
+    function showNotification(title, message) {
+        if ('Notification' in window) {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    new Notification(title, { body: message });
+                }
+            });
+        }
+        
+        // Also show an in-app notification
+        const notificationElement = document.createElement('div');
+        notificationElement.classList.add('app-notification');
+        notificationElement.innerHTML = `
+            <h4>${title}</h4>
+            <p>${message}</p>
+        `;
+        document.body.appendChild(notificationElement);
+        
+        // Remove the notification after a delay
+        setTimeout(() => {
+            notificationElement.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(notificationElement);
+            }, 300);
+        }, 5000);
+    }
+    
+    // Filter orders by status
+    document.querySelectorAll('.filter-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            this.classList.add('active');
+            
+            const status = this.dataset.status;
+            loadOrders(status);
+        });
+    });
+    
+    // Load all orders on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadOrders();
+    });
+</script>
+{% endblock %}

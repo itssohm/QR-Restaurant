@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block title %}Restaurant Registration{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <i class="fas fa-store auth-icon"></i>
+            <h1>Restaurant Registration</h1>
+            <p class="auth-subtitle">Join our platform and start taking orders</p>
+        </div>
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('admin_register') }}" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="name"><i class="fas fa-store-alt input-icon"></i> Restaurant Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email"><i class="fas fa-envelope input-icon"></i> Email Address</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password"><i class="fas fa-lock input-icon"></i> Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirm_password"><i class="fas fa-check-circle input-icon"></i> Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="description"><i class="fas fa-info-circle input-icon"></i> Restaurant Description</label>
+                <textarea id="description" name="description" rows="3" class="form-textarea"></textarea>
+            </div>
+            
+            <div class="form-group file-upload">
+                <label for="logo"><i class="fas fa-image input-icon"></i> Restaurant Logo (optional)</label>
+                <div class="custom-file-upload">
+                    <input type="file" id="logo" name="logo" accept="image/*">
+                    <span class="file-label">Choose file</span>
+                </div>
+                <p class="file-name">No file chosen</p>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="auth-button">
+                    <i class="fas fa-user-plus"></i> Register Restaurant
+                </button>
+            </div>
+        </form>
+
+        <div class="auth-link">
+            <p>Already have an account? <a href="{{ url_for('admin_login') }}">Login</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 80px);
+        min-height: auto;
+        padding: 3rem 1rem;
+        margin: 0;
+        overflow: hidden;
+    }
+
+    .auth-card {
+        background-color: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 2.5rem;
+        width: 100%;
+        max-width: 650px; /* Increased width */
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+
+    .auth-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .auth-header {
+        margin-bottom: 2rem;
+    }
+
+    .auth-icon {
+        font-size: 2.5rem;
+        color: #e23744;
+        margin-bottom: 1rem;
+    }
+
+    .auth-card h1 {
+        color: #333;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        font-size: 1.8rem;
+    }
+
+    .auth-subtitle {
+        color: #6c757d;
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+        text-align: left;
+        position: relative;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #495057;
+        font-size: 0.95rem;
+    }
+
+    .input-icon {
+        margin-right: 0.5rem;
+        color: #e23744;
+    }
+
+    .form-group input, .form-textarea {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background-color: #f8f9fa;
+    }
+
+    .form-group input:focus, .form-textarea:focus {
+        border-color: #e23744;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(226, 55, 68, 0.2);
+        background-color: #fff;
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 80px; /* Reduced minimum height */
+        max-height: 120px;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .custom-file-upload {
+        display: inline-block;
+        position: relative;
+        width: 100%;
+    }
+
+    .custom-file-upload input[type="file"] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .file-label {
+        display: block;
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        padding: 0.8rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: #6c757d;
+    }
+
+    .custom-file-upload:hover .file-label {
+        background-color: #f1f3f5;
+        border-color: #adb5bd;
+    }
+
+    .file-name {
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        color: #6c757d;
+        text-align: center;
+    }
+
+    .form-actions {
+        margin-top: 2rem;
+    }
+
+    .auth-button {
+        background-color: #e23744;
+        color: white;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 8px;
+        width: 100%;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .auth-button i {
+        margin-right: 0.5rem;
+    }
+
+    .auth-button:hover {
+        background-color: #d12f3c;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(226, 55, 68, 0.3);
+    }
+
+    .auth-link {
+        text-align: center;
+        margin-top: 1.5rem;
+        font-size: 0.95rem;
+        color: #6c757d;
+    }
+
+    .auth-link a {
+        color: #e23744;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s;
+    }
+
+    .auth-link a:hover {
+        color: #d12f3c;
+        text-decoration: underline;
+    }
+
+    .alert {
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .alert-success {
+        background-color: #d1e7dd;
+        color: #0f5132;
+        border: 1px solid #badbcc;
+    }
+
+    .alert-error {
+        background-color: #f8d7da;
+        color: #842029;
+        border: 1px solid #f5c2c7;
+    }
+
+    @media (max-width: 768px) {
+        .auth-card {
+            padding: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('logo').addEventListener('change', function() {
+        var fileName = this.files[0]?.name || 'No file chosen';
+        document.querySelector('.file-name').textContent = fileName;
+    });
+</script>
+{% endblock %}
