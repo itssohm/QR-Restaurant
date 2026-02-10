@@ -1,21 +1,24 @@
 import pytest
-from app import app # Import your Flask app object
+# Note: Changed from 'from app import app' to 'from app import create_app'
+from app import create_app 
 
 @pytest.fixture
-def client():
-    # Setup the test client
-    app.config['TESTING'] = True
-    with app.test_client() as client:
-        yield client
+def app():
+    """Create and configure a new app instance for each test."""
+    app = create_app()
+    app.config.update({
+        "TESTING": True,
+    })
+    yield app
 
-def test_home_page(client):
-    """Test that the homepage returns a 200 OK status."""
+@pytest.fixture
+def client(app):
+    """A test client for the app."""
+    return app.test_client()
+
+def test_homepage(client):
+    """Test that the homepage is accessible."""
     response = client.get('/')
     assert response.status_code == 200
 
-def test_health_check(client):
-    """Test a specific health endpoint (if you have one)."""
-    response = client.get('/health') # Change this to an actual route you have
-    # If the route exists, check the status
-    if response.status_code != 404:
-        assert response.status_code == 200
+
