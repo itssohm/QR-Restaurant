@@ -1,0 +1,39 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - echo Installing dependencies for testing...
+      - pip install pytest pytest-cov bandit # bandit is for security linting
+      - pip install -r requirements.txt
+  pre_build:
+    commands:
+      - echo Running Security Linting...
+      - bandit -r app.py # Task 1.2: Basic security scan
+      - echo Running Unit Tests...
+      - python -m pytest --junitxml=reports/pytest_report.xml --cov=app tests/
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+  build:
+    commands:
+      - echo Building the Docker image...
+      - docker build -t $REPOSITORY_URI:latest .
+  post_build:
+    commands:
+      - echo Pushing the Docker image...
+      - docker push $REPOSITORY_URI:latest
+      - printf '[{"name":"flask-container","imageUri":"%s"}]' $REPOSITORY_URI:latest > imagedefinitions.json
+
+# Task 1.2: This makes test results visible in the AWS CodeBuild Console
+reports:
+  pytest_reports:
+    files:
+      - reports/pytest_report.xml
+    file-format: JUNITXML
+    base-directory: ./
+
+artifacts:
+  files: imagedefinitions.json
